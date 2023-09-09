@@ -8,19 +8,17 @@ const productController = {
         const skip = req.query.skip ?? 0;
         const limit = req.query.limit ?? 0;
         const name = req.query.name ?? '';
-        const category = req.query.category ?? '';
+        const material = req.query.material ?? '';
+        const color = req.query.color ?? '';
+        const characteristic = req.query.characteristic ?? '';
+        const brand = req.query.brand ?? 'none';
+        const diameter = req.query.diameter ?? 0;
+        const height = req.query.height ?? 0;
+
         const random = req.query['random'] ?? ''; //mark: [slug]*[randomsize]
         if (name) {
             const products = await ProductModel.find({
-                name: { $regex: new RegExp(name, 'i') },
-            })
-                .skip(+skip)
-                .limit(+limit);
-            return res.json(new HandleResponseJson(products));
-        }
-        if (category) {
-            const products = await ProductModel.find({
-                category: { $regex: new RegExp(category, 'i') },
+                name: { $regex: new RegExp(name, 'i') }
             })
                 .skip(+skip)
                 .limit(+limit);
@@ -31,7 +29,7 @@ const productController = {
             const count = await ProductModel.count();
             const randomNum = Math.floor(Math.random() * count);
             const products = await ProductModel.find({
-                slug: { $ne: slug },
+                slug: { $ne: slug }
             })
                 .skip(randomNum)
                 .limit(randomSize);
@@ -40,7 +38,7 @@ const productController = {
             } else {
                 const newLimit = +randomSize - products.length;
                 const bonusProducts = await ProductModel.find({
-                    slug: { $ne: slug },
+                    slug: { $ne: slug }
                 })
                     .skip(0)
                     .limit(newLimit);
@@ -48,6 +46,34 @@ const productController = {
                     new HandleResponseJson([...products, ...bonusProducts])
                 );
             }
+        }
+        if (
+            material ||
+            color ||
+            characteristic ||
+            brand ||
+            diameter ||
+            height
+        ) {
+            let query = {};
+            if (material) query['material'] = material;
+            if (color) query['color'] = color;
+            if (characteristic) {
+                const characteristics = characteristic
+                    .split(',')
+                    .reduce((acc, curr) => {
+                        acc[curr] = true;
+                        return acc;
+                    }, {});
+                query = { ...query, ...characteristics };
+            }
+            if (brand) query['brand'] = brand;
+            if (diameter) query['diameter'] = diameter;
+            if (height) query['height'] = height;
+            const products = await ProductModel.find({ ...query })
+                .skip(+skip)
+                .limit(+limit);
+            return res.json(new HandleResponseJson(products));
         }
         const products = await ProductModel.find({}).skip(+skip).limit(+limit);
         if (!products) next(new HandleError());
@@ -58,7 +84,7 @@ const productController = {
         const slug = req.params.slug;
         try {
             const existedProduct = await ProductModel.findOne({
-                slug,
+                slug
             });
             // console.log(existedCart);
             if (!existedProduct)
@@ -88,8 +114,8 @@ const productController = {
         try {
             const products = await ProductModel.find({
                 _id: {
-                    $in: idsConverted,
-                },
+                    $in: idsConverted
+                }
             });
             // console.log(existedCart);
             if (!products)
@@ -97,14 +123,14 @@ const productController = {
             const productsCoverted = products.map((product, index) => {
                 return {
                     ...product._doc,
-                    quantityInCart: quantities[index],
+                    quantityInCart: quantities[index]
                 };
             });
             return res.json(new HandleResponseJson(productsCoverted));
         } catch (error) {
             next(error);
         }
-    },
+    }
     // new: async (req, res, next) => {},
     // update: async (req, res, next) => {},
     // delete: async (req, res, next) => {},

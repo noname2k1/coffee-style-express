@@ -6,8 +6,10 @@ import * as AdminJSMongoose from '@adminjs/mongoose';
 import express from 'express';
 import MongoStore from 'connect-mongo';
 import connectToMongodb from './db/connect.js';
+
 import ProductModel from './models/productModel.js';
 import CartModel from './models/cartModel.js';
+import OrderModel from './models/orderModel.js';
 
 const PORT = 3000;
 
@@ -33,7 +35,7 @@ const start = async () => {
     connectToMongodb();
 
     const admin = new AdminJS({
-        resources: [ProductModel, CartModel],
+        resources: [ProductModel, CartModel, OrderModel],
     });
 
     const adminRouter = AdminJSExpress.buildAuthenticatedRouter(

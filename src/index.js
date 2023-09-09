@@ -5,13 +5,18 @@ import express from 'express';
 import productController from './controllers/productController.js';
 import cartController from './controllers/cartController.js';
 import connectToMongodb from './db/connect.js';
-const app = express();
 import cors from 'cors';
+import cron from 'node-cron';
+import OrderModel from './models/orderModel.js';
+import orderController from './controllers/orderController.js';
+
+const app = express();
 const port = 9900;
 connectToMongodb();
 
 const corsOptions = {
-    origin: process.env.CLIENT_ORIGIN,
+    // origin: process.env.CLIENT_ORIGIN,
+    origin: '*',
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
@@ -35,12 +40,27 @@ app.get(prefix + 'carts/:userid', cartController.show);
 app.post(prefix + 'carts', cartController.new);
 app.patch(prefix + 'carts/:userid', cartController.update);
 
+// orders
+app.get(prefix + 'orders', orderController.index);
+app.get(prefix + 'orders/:userid', orderController.show);
+app.post(prefix + 'orders', orderController.new);
+// app.patch(prefix + 'orders/:userid', cartController.update);
+
 app.use((err, req, res, next) => {
     console.log(err);
     return res.status(err.statusCode || 500).json({
         success: false,
         message: err.message || 'Internal Server Error',
     });
+});
+
+// Lập lịch chạy mỗi phút để kiểm tra và cập nhật trạng thái
+cron.schedule('* * * * *', async () => {
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000); // Lấy thời điểm 10 phút trước
+    await OrderModel.updateMany(
+        { ispaid: false, createdAt: { $lt: tenMinutesAgo } },
+        { disabled: true }
+    );
 });
 
 app.listen(port, () => {

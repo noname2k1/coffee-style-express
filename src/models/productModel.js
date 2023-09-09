@@ -11,17 +11,23 @@ const productSchema = new Schema(
         description: { type: String },
         quantity: { type: Number },
         details: { type: String },
-        dimensions: [Number],
-        onSale: { type: Boolean, default: false },
-        category: {
+        onsale: { type: Boolean, default: false },
+        material: {
             type: String,
-            enum: ['Coffee mugs', 'Premium', 'Tea mugs', 'Others'],
+            enum: ['ceramic', 'glass', 'crystal', 'metal'],
+            default: 'ceramic'
         },
+        brand: { type: String, default: 'none' },
         slug: { type: String, unique: true },
+        color: { type: String, default: 'white' },
+        handler: { type: Boolean, default: true },
+        diameter: { type: Number, default: 0 },
+        height: { type: Number, default: 0 },
+        pattern: { type: Boolean, default: false }
     },
     {
         timestamps: true,
-        collection: 'products',
+        collection: 'products'
     }
 );
 
