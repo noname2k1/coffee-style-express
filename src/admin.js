@@ -15,12 +15,12 @@ const PORT = 3000;
 
 const DEFAULT_ADMIN = {
     email: process.env.ADMIN_USERNAME,
-    password: process.env.ADMIN_PASSWORD,
+    password: process.env.ADMIN_PASSWORD
 };
 
 AdminJS.registerAdapter({
     Resource: AdminJSMongoose.Resource,
-    Database: AdminJSMongoose.Database,
+    Database: AdminJSMongoose.Database
 });
 
 const authenticate = async (email, password) => {
@@ -35,7 +35,7 @@ const start = async () => {
     connectToMongodb();
 
     const admin = new AdminJS({
-        resources: [ProductModel, CartModel, OrderModel],
+        resources: [ProductModel, CartModel, OrderModel]
     });
 
     const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
@@ -43,21 +43,21 @@ const start = async () => {
         {
             authenticate,
             cookieName: 'adminjs',
-            cookiePassword: 'sessionsecret',
+            cookiePassword: 'sessionsecret'
         },
         null,
         {
             store: MongoStore.create({
-                mongoUrl: 'mongodb://localhost:27017/adminjs',
+                mongoUrl: 'mongodb://127.0.0.1:27017/adminjs'
             }),
             resave: true,
             saveUninitialized: true,
             secret: 'sessionsecret',
             cookie: {
                 httpOnly: process.env.NODE_ENV === 'production',
-                secure: process.env.NODE_ENV === 'production',
+                secure: process.env.NODE_ENV === 'production'
             },
-            name: 'adminjs',
+            name: 'adminjs'
         }
     );
     app.use(admin.options.rootPath, adminRouter);

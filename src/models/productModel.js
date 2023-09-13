@@ -21,8 +21,8 @@ const productSchema = new Schema(
         slug: { type: String, unique: true },
         color: { type: String, default: 'white' },
         handler: { type: Boolean, default: true },
-        diameter: { type: Number, default: 0 },
-        height: { type: Number, default: 0 },
+        diameter: { type: [Number], default: [8, 10, 12] },
+        height: { type: [Number], default: [10, 12, 15] },
         pattern: { type: Boolean, default: false }
     },
     {

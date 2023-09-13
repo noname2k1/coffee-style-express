@@ -14,7 +14,6 @@ const productController = {
         const brand = req.query.brand ?? 'none';
         const diameter = req.query.diameter ?? 0;
         const height = req.query.height ?? 0;
-
         const random = req.query['random'] ?? ''; //mark: [slug]*[randomsize]
         if (name) {
             const products = await ProductModel.find({
@@ -47,6 +46,9 @@ const productController = {
                 );
             }
         }
+
+        let pageCount;
+
         if (
             material ||
             color ||
@@ -73,11 +75,25 @@ const productController = {
             const products = await ProductModel.find({ ...query })
                 .skip(+skip)
                 .limit(+limit);
-            return res.json(new HandleResponseJson(products));
+            const countDocuments = await ProductModel.countDocuments({
+                ...query
+            });
+            if (limit) {
+                pageCount = Math.ceil(countDocuments / limit);
+            } else {
+                pageCount = 0;
+            }
+            return res.json(new HandleResponseJson(products, pageCount));
         }
         const products = await ProductModel.find({}).skip(+skip).limit(+limit);
+        const countDocuments = await ProductModel.countDocuments();
+        if (limit) {
+            pageCount = Math.ceil(countDocuments / limit);
+        } else {
+            pageCount = 0;
+        }
         if (!products) next(new HandleError());
-        return res.json(new HandleResponseJson(products));
+        return res.json(new HandleResponseJson(products, pageCount));
     },
     // [GET] '/api/v1/products/:slug'
     show: async (req, res, next) => {
@@ -97,33 +113,55 @@ const productController = {
     // [GET] '/api/v1/products/show-many/:ids' (use for get product from cart)
     showMore: async (req, res, next) => {
         const ids = req.params.ids;
+        // console.log(ids);
         const idsConverted = ids
             .split(',')
             .map((idQuantity) => {
-                const [id, quantity] = idQuantity.split('*');
+                const [id] = idQuantity.split('*');
                 return id;
             })
             .slice(0, ids.split(',').length - 1);
         const quantities = ids
             .split(',')
             .map((idQuantity) => {
-                const [id, quantity] = idQuantity.split('*');
+                const [, quantity] = idQuantity.split('*');
                 return quantity;
             })
             .slice(0, ids.split(',').length - 1);
+        const diameters = ids
+            .split(',')
+            .map((idQuantity) => {
+                const [, , diameter] = idQuantity.split('*');
+                return diameter;
+            })
+            .slice(0, ids.split(',').length - 1);
+        const heights = ids
+            .split(',')
+            .map((idQuantity) => {
+                const [, , , height] = idQuantity.split('*');
+                return height;
+            })
+            .slice(0, ids.split(',').length - 1);
         try {
-            const products = await ProductModel.find({
-                _id: {
-                    $in: idsConverted
-                }
-            });
+            let products = [];
+            // console.log(idsConverted);
+            for (let id of idsConverted) {
+                const product = await ProductModel.findOne({
+                    _id: id
+                });
+                products.push(product);
+            }
             // console.log(existedCart);
             if (!products)
                 next(new HandleError(404, "Products doesn't existed!"));
             const productsCoverted = products.map((product, index) => {
                 return {
                     ...product._doc,
-                    quantityInCart: quantities[index]
+                    quantityInCart: quantities[index],
+                    size: {
+                        diameter: diameters[index],
+                        height: heights[index]
+                    }
                 };
             });
             return res.json(new HandleResponseJson(productsCoverted));

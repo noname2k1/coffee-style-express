@@ -1,7 +1,8 @@
 class HandleResponseJson {
     success = true;
-    constructor(data) {
+    constructor(data, pageCount = 0) {
         this.data = data;
+        this.pageCount = pageCount;
     }
 }
 

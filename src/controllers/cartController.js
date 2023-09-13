@@ -6,7 +6,7 @@ const cartController = {
     index: async (req, res) => {
         return res.json({
             success: true,
-            data: await CartModel.find({}),
+            data: await CartModel.find({})
         });
     },
     // [GET] '/carts/:userid'
@@ -18,7 +18,7 @@ const cartController = {
                 next(new HandleError(400, 'userid required!'));
             }
             const existedCart = await CartModel.findOne({
-                userid,
+                userid
             });
             // console.log(existedCart);
             if (!existedCart)
@@ -36,12 +36,12 @@ const cartController = {
                 next(new HandleError(400, 'userid required!'));
             }
             const existedCart = await CartModel.findOne({
-                userid,
+                userid
             });
             // console.log(existedCart);
             if (existedCart) next(new HandleError(400, 'Cart existed!'));
             const createCart = await CartModel.create({
-                userid,
+                userid
             });
             return res.json(new HandleResponseJson(createCart));
         } catch (error) {
@@ -60,32 +60,32 @@ const cartController = {
                 next(new HandleError(404, 'products required!'));
             }
             const existedCart = await CartModel.findOne({
-                userid,
+                userid
             });
             // console.log(existedCart);
             if (!existedCart) {
                 const newCart = await CartModel.create({
                     userid,
-                    products,
+                    products
                 });
                 return res.json(new HandleResponseJson(newCart));
             }
             const updatedCart = await CartModel.findOneAndUpdate(
                 {
-                    userid,
+                    userid
                 },
                 {
-                    products,
+                    products
                 },
                 {
-                    new: true,
+                    new: true
                 }
             );
             return res.json(new HandleResponseJson(updatedCart));
         } catch (error) {
             next(error);
         }
-    },
+    }
     // [DEL] '/carts/:userid'
     // delete: async (req, res, next) => {},
 };
